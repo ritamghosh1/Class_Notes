@@ -88,12 +88,21 @@ Without capturing that return value into the `pid` variable, your program wouldn
 ## Problem 2: Process Interleaving and Strict Synchronization
 
 ### Part A: Interleaving and Concurrency
+
 **The Goal:** Create two child processes (X and Y) that each run a loop for `N` iterations. In each iteration, they print their identity and iteration number, then sleep for a random amount of time.
 
 **The Theory (Process Interleaving):**
-When multiple processes are running on a computer concurrently, the Operating System's scheduler decides which process gets to use the CPU at any given microsecond. Because we introduce a `sleep()` with a random duration, we are forcing the OS to constantly switch back and forth between Process X and Process Y. 
+When multiple processes are running on a computer concurrently, the Operating System's scheduler decides which process gets to use the CPU at any given microsecond. This is managed via **Time Slicing** (often using algorithms like Round Robin), where each process gets a tiny window of CPU time before being swapped out (a **Context Switch**) for another process.
 
-This creates **process interleaving**. The output will look scrambled or "interleaved" (e.g., X1, Y1, Y2, X2, X3, Y3). Each time you run the program, the exact order of the output will be different because the random sleep durations change how the OS scheduler interleaves the execution traces. This demonstrates the unpredictable nature of concurrent execution when there is no synchronization.
+Because we introduce a random sleep duration, we explicitly force the process to give up its CPU time slice and enter a "blocked" or "sleeping" state. The OS scheduler must then switch to the other available process.
+
+This creates **process interleaving**. The output will look scrambled or "interleaved" (e.g., `X1, Y1, Y2, X2, X3, Y3`). Each time you run the program, the exact order of the output will be different. This non-deterministic behavior demonstrates the unpredictable nature of concurrent execution when there is no strict synchronization mechanism (like semaphores or mutexes) in place. 
+
+**Implementation Details for C (`qs2.c`):**
+To simulate this effectively in your C code:
+1.  **Randomness (`rand()` & `srand()`):** Use `rand()` (from `<stdlib.h>`) to generate random sleep times. To ensure the sequence of random numbers is different every time you run the program, you must "seed" the random number generator. Because `fork()` duplicates the parent's memory, if you seed in the parent, both children will generate the exact same "random" numbers. To fix this, seed inside the child process using something unique to it, like its PID: `srand(time(NULL) ^ getpid());`.
+2.  **Sleeping (`usleep()`):** Instead of `sleep()`, which waits for whole seconds (making the program run very slowly), use `usleep(microseconds)` (from `<unistd.h>`) to sleep for fractions of a second. This makes the interleaving much more apparent. For example, `usleep(rand() % 100000);` sleeps for up to 0.1 seconds.
+3.  **Flushing output (`fflush(stdout)`):** When mixing `printf` and `fork()`, standard output is sometimes buffered, meaning lines from one process might be held back and printed all at once. Calling `fflush(stdout);` immediately after your `printf` forces the text to appear on the console exactly when it executes, giving you a true picture of the interleaving.
 
 ### Part B: Enforcing Strict Alternation (Synchronization)
 **The Goal:** Modify the program so that Process Y cannot start iteration `i` until Process X has fully finished its iteration `i-1`.
