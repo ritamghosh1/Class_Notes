@@ -120,3 +120,75 @@ To solve this, we can use the same IPC mechanism as before: a **pipe**. We need 
     *   As soon as X finishes and writes the token, Y reads it and is unblocked, allowing it to proceed with its iteration.
 
 By establishing this relationship over a pipe in a loop, we enforce strict ordering: Y's current iteration must always wait for X's previous iteration to conclude.
+
+---
+
+## Problem 5: Deadlock Avoidance (Banker's Algorithm)
+
+**The Goal:** Write a program to determine if a system is in a "safe state" and whether a specific resource request from a process should be granted without leading to a deadlock.
+
+### The Theory (Banker's Algorithm)
+In an operating system, processes request resources (like memory, printers, CPU cycles). If resources are granted blindly, the system might enter a **deadlock** (where processes are waiting on each other indefinitely). 
+
+The **Banker's Algorithm** avoids deadlock by simulating the allocation of predetermined maximum possible amounts of all resources, and then making a "safe-state" check to test for possible deadlock conditions for all other pending activities, before deciding whether allocation should be allowed to continue.
+
+**Key Matrices/Vectors in Banker's Algorithm:**
+1. **Available (Vector):** The number of available instances of each resource type.
+2. **Max (Matrix):** The maximum demand of each process. `Max[i][j] = k` means process `i` may request at most `k` instances of resource type `j`.
+3. **Allocation (Matrix):** The number of resources of each type currently allocated to each process.
+4. **Need (Matrix):** The remaining resource need of each process. `Need[i][j] = Max[i][j] - Allocation[i][j]`.
+
+**Safe State:** A state is considered safe if there exists a sequence of all processes `<P1, P2, ..., Pn>` such that for each `Pi`, the resources that `Pi` can still request can be satisfied by the currently available resources plus the resources held by all previously finished processes in the sequence.
+
+**Resource-Request Algorithm:**
+When a process `Pi` requests a set of resources (`Request_i`):
+1. Check if `Request_i <= Need_i`. If not, raise an error (process exceeded maximum claim).
+2. Check if `Request_i <= Available`. If not, `Pi` must wait (resources not available).
+3. Pretend to allocate the resources:
+   - `Available = Available - Request_i`
+   - `Allocation_i = Allocation_i + Request_i`
+   - `Need_i = Need_i - Request_i`
+4. Run the Safety Algorithm on this new state.
+   - If the new state is safe, formally grant the request.
+   - If the new state is unsafe, restore the old state (undo step 3) and `Pi` must wait.
+
+### Implementation Details for C (`qs5.c`)
+Your program needs to read from a file and parse a specific format. Here are some tips for implementation:
+
+1. **File Parsing (`fgets` and `strtok`):**
+   - The input format is slightly complex, using mixed text and numbers, and commas as delimiters. 
+   - Read the file line-by-line using `fgets()`. Then, use `strtok()` with commas `","` and spaces `" "` as delimiters to extract the numbers, ignoring the text labels. You can use `atoi()` to convert the token strings to integers.
+   - Alternatively, you can use `fscanf` if you carefully match the string literals, but `strtok` is generally safer for mixed formats.
+
+2. **Data Structures:**
+   - Use arrays to store your matrices. Since this is C, you can define a `MAX_PROCESSES` (e.g., 100) and `MAX_RESOURCES` (e.g., 100) to keep things simple:
+     ```c
+     int available[MAX_RESOURCES];
+     int max[MAX_PROCESSES][MAX_RESOURCES];
+     int allocation[MAX_PROCESSES][MAX_RESOURCES];
+     int need[MAX_PROCESSES][MAX_RESOURCES];
+     ```
+
+3. **The "Present Situation" Generation:**
+   - The problem asks you to generate the present situation (Allocation matrix) based on a sequence.
+   - When generating the initial `Allocation` matrix, ensure you also calculate the initial `Need` matrix (`Need[i][j] = Max[i][j] - Allocation[i][j]`).
+   - Also, update the `Available` array by subtracting the initially allocated resources from the total instances of each resource.
+
+4. **The Safety Algorithm Loop:**
+   - You need a `bool finish[MAX_PROCESSES]` array initialized to `false`.
+   - You need a `work[MAX_RESOURCES]` array initialized to a copy of `available`.
+   - Loop through all processes. Find a process `i` such that `!finish[i]` AND `need[i][j] <= work[j]` for all resources `j`.
+   - If found, simulate it finishing: `work[j] += allocation[i][j]`, and `finish[i] = true`. Add `i` to your `safe_sequence` array.
+   - Repeat this until no such process can be found.
+   - If all `finish[i]` are true, it's a safe state! You can print the `safe_sequence`.
+
+5. **Handling Interactive Requests:**
+   - Wrap the request logic in an infinite `while(1)` loop. 
+   - Prompt the user for the sequence `<pid r0 r1 r2 ...>`.
+   - Apply the Resource-Request algorithm:
+     1. Bounds checking.
+     2. Pretend allocation (temporarily modify `Available`, `Allocation`, and `Need`).
+     3. Run the Safety check.
+   - If safe, tell the user the request is granted and print the safe sequence. Keep the matrix changes.
+   - If unsafe, tell the user it's denied, REVERT the matrix changes back to their previous state, and prompt again.
+   - Stop the loop when all processes have finished (i.e., when `Need[i][j] == 0` for all `i, j`).
