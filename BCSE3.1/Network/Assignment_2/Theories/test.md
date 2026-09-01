@@ -162,6 +162,8 @@ Terminal A (Receiver)          Terminal B (Sender)
 python3 receiver.py ...   ←→  python3 sender.py ...
 ```
 
+> **Note on `--dashboard`:** You can append the `--dashboard` flag to both commands for a beautiful live visual UI (requires `pip install rich`). When using the dashboard, you **must** use separate terminal windows as shown above; do not run them in the background in the same shell.
+
 ---
 
 ## Protocol 1: Stop-and-Wait (SAW)
@@ -443,6 +445,7 @@ else:
 | `--output` | str | `output.txt` | Output file for received data |
 | `--payload` | int | `46` | Payload bytes per frame (must match sender) |
 | `--verbose` | flag | off | Per-frame debug output |
+| `--dashboard` | flag | off | Enable rich live terminal UI |
 
 ### sender.py options
 
@@ -459,6 +462,7 @@ else:
 | `--delay` | float | `50.0` | Max channel delay in ms |
 | `--timeout` | float | `500.0` | Initial RTO in ms |
 | `--verbose` | flag | off | Per-frame debug output |
+| `--dashboard` | flag | off | Enable rich live terminal UI |
 
 ---
 
