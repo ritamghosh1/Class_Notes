@@ -1,0 +1,72 @@
+[SENDER][SAW] Transmission complete.
+
+[Timer] RTT Statistics (2468 samples):
+  Min RTT     : 0.70 ms
+  Max RTT     : 33.17 ms
+  Average RTT : 1.80 ms
+  Smoothed RTT: 1.51 ms  (SRTT)
+  RTT Dev     : 0.29 ms  (RTTVAR)
+  Current RTO : 50.00 ms
+
+[SENDER] ---- SAW Summary ----
+  Total time         : 142.418 s
+  Original frames    : 2468
+  Retransmissions    : 1847
+  Data bytes sent    : 113528
+  Throughput         : 797.1 B/s
+  Channel efficiency : 57.2%
+
+[SENDER] Channel Statistics:
+  Frames sent      : 3045
+  Frames dropped   : 1270
+  Frames corrupted : 577
+  Frames delayed   : 3045
+
+
+[SENDER][GBN] Transmission complete.
+
+[Timer] RTT Statistics (2468 samples):
+  Min RTT     : 1.14 ms
+  Max RTT     : 74.11 ms
+  Average RTT : 17.52 ms
+  Smoothed RTT: 11.81 ms  (SRTT)
+  RTT Dev     : 8.40 ms  (RTTVAR)
+  Current RTO : 50.00 ms
+
+[SENDER] ---- GBN Summary ----
+  Total time         : 130.283 s
+  Original frames    : 2468
+  Retransmissions    : 7671
+  Data bytes sent    : 113528
+  Throughput         : 871.4 B/s
+  Channel efficiency : 24.3%
+
+[SENDER] Channel Statistics:
+  Frames sent      : 7129
+  Frames dropped   : 3010
+  Frames corrupted : 1419
+  Frames delayed   : 7129
+
+  [SENDER][SR] Transmission complete.
+
+[Timer] RTT Statistics (2468 samples):
+  Min RTT     : 0.65 ms
+  Max RTT     : 46.64 ms
+  Average RTT : 9.20 ms
+  Smoothed RTT: 7.57 ms  (SRTT)
+  RTT Dev     : 6.25 ms  (RTTVAR)
+  Current RTO : 50.00 ms
+
+[SENDER] ---- SR Summary ----
+  Total time         : 58.099 s
+  Original frames    : 2468
+  Retransmissions    : 2007
+  Data bytes sent    : 113528
+  Throughput         : 1954.1 B/s
+  Channel efficiency : 55.2%
+
+[SENDER] Channel Statistics:
+  Frames sent      : 3094
+  Frames dropped   : 1381
+  Frames corrupted : 625
+  Frames delayed   : 3094
