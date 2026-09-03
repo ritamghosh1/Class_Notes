@@ -4,29 +4,35 @@
 ;     b. STRCMP   - Compare two strings (returns 0 if equal, 1 if not)
 ;     c. STRREV  - Reverse a string in place
 ; =============================================================================
-; Assembler: MASM (8086)
+; Assembler: MASM (8086) - EXE format
 ; =============================================================================
 
 .MODEL SMALL
 .STACK 100H
 
 .DATA
-    ; Test strings
-    STR1    DB 'Hello, World!', '$'
-    STR2    DB 'Hello, World!', '$'
-    STR3    DB 'Different', '$'
-    STR_REV DB 'ABCDEF', '$'
+    ; Input messages
+    MSG_IN1    DB 'Enter STR1: $'
+    MSG_IN2    DB 0DH, 0AH, 'Enter STR2: $'
+    MSG_IN3    DB 0DH, 0AH, 'Enter STR3: $'
+    MSG_IN_REV DB 0DH, 0AH, 'Enter string to reverse: $'
+
+    ; Input buffers (Max 50 chars + length byte + actual length byte)
+    BUF1       DB 51, ?, 51 DUP('$')
+    BUF2       DB 51, ?, 51 DUP('$')
+    BUF3       DB 51, ?, 51 DUP('$')
+    BUF_REV    DB 51, ?, 51 DUP('$')
 
     ; Output messages
-    MSG_LEN    DB 0DH, 0AH, '--- STRLEN ---', 0DH, 0AH, '$'
-    MSG_LEN_R  DB 0DH, 0AH, 'Length of STR1: $'
+    MSG_LEN    DB 0DH, 0AH, 0DH, 0AH, '--- STRLEN ---', 0DH, 0AH, '$'
+    MSG_LEN_R  DB 'Length of STR1: $'
 
     MSG_CMP    DB 0DH, 0AH, '--- STRCMP ---', 0DH, 0AH, '$'
-    MSG_EQ     DB 0DH, 0AH, 'STR1 and STR2 are EQUAL$'
-    MSG_NEQ    DB 0DH, 0AH, 'STR1 and STR3 are NOT EQUAL$'
+    MSG_EQ     DB 'STR1 and STR2 are EQUAL', 0DH, 0AH, '$'
+    MSG_NEQ    DB 'STR1 and STR3 are NOT EQUAL', 0DH, 0AH, '$'
 
     MSG_REV    DB 0DH, 0AH, '--- STRREV ---', 0DH, 0AH, '$'
-    MSG_BEF    DB 0DH, 0AH, 'Before reverse: $'
+    MSG_BEF    DB 'Before reverse: $'
     MSG_AFT    DB 0DH, 0AH, 'After reverse:  $'
 
     NEWLINE    DB 0DH, 0AH, '$'
@@ -35,6 +41,36 @@
 MAIN PROC
     MOV AX, @DATA
     MOV DS, AX
+
+    ; --- Read Strings ---
+    ; Read STR1
+    LEA DX, MSG_IN1
+    MOV AH, 09H
+    INT 21H
+    LEA DX, BUF1
+    CALL READ_STRING
+
+    ; Read STR2
+    LEA DX, MSG_IN2
+    MOV AH, 09H
+    INT 21H
+    LEA DX, BUF2
+    CALL READ_STRING
+
+    ; Read STR3
+    LEA DX, MSG_IN3
+    MOV AH, 09H
+    INT 21H
+    LEA DX, BUF3
+    CALL READ_STRING
+
+    ; Read STR_REV
+    LEA DX, MSG_IN_REV
+    MOV AH, 09H
+    INT 21H
+    LEA DX, BUF_REV
+    CALL READ_STRING
+
 
     ; =============================================
     ; Demo STRLEN
@@ -47,22 +83,22 @@ MAIN PROC
     MOV AH, 09H
     INT 21H
 
-    LEA SI, STR1
+    LEA SI, BUF1 + 2         ; Point to actual string data in buffer
     CALL STRLEN              ; Result in CX
-    ; Display length (CX contains length)
     MOV AX, CX
     CALL PRINT_NUMBER
 
     ; =============================================
-    ; Demo STRCMP (STR1 vs STR2 - should be equal)
+    ; Demo STRCMP
     ; =============================================
     LEA DX, MSG_CMP
     MOV AH, 09H
     INT 21H
 
-    LEA SI, STR1
-    LEA DI, STR2
-    CALL STRCMP               ; Result: AX=0 if equal, AX=1 if not
+    ; Compare STR1 vs STR2
+    LEA SI, BUF1 + 2
+    LEA DI, BUF2 + 2
+    CALL STRCMP               ; Result: AX=0 if equal
 
     CMP AX, 0
     JNE SKIP_EQ
@@ -71,9 +107,9 @@ MAIN PROC
     INT 21H
 SKIP_EQ:
 
-    ; Demo STRCMP (STR1 vs STR3 - should be different)
-    LEA SI, STR1
-    LEA DI, STR3
+    ; Compare STR1 vs STR3
+    LEA SI, BUF1 + 2
+    LEA DI, BUF3 + 2
     CALL STRCMP
 
     CMP AX, 0
@@ -94,19 +130,19 @@ SKIP_NEQ:
     LEA DX, MSG_BEF
     MOV AH, 09H
     INT 21H
-    LEA DX, STR_REV
+    LEA DX, BUF_REV + 2
     MOV AH, 09H
     INT 21H
 
     ; Reverse
-    LEA SI, STR_REV
+    LEA SI, BUF_REV + 2
     CALL STRREV
 
     ; Print after
     LEA DX, MSG_AFT
     MOV AH, 09H
     INT 21H
-    LEA DX, STR_REV
+    LEA DX, BUF_REV + 2
     MOV AH, 09H
     INT 21H
 
@@ -114,6 +150,24 @@ SKIP_NEQ:
     MOV AH, 4CH
     INT 21H
 MAIN ENDP
+
+; =============================================================
+; READ_STRING: Prompts DOS to read a string into buffer (DX)
+;              and replaces the trailing 0DH with '$'
+; Input: DX -> buffer
+; =============================================================
+READ_STRING PROC
+    MOV AH, 0AH              ; Buffered input
+    INT 21H
+    
+    MOV BX, DX
+    XOR CH, CH
+    MOV CL, [BX+1]           ; Get number of characters read
+    ADD BX, 2                ; Skip buffer header
+    ADD BX, CX               ; Jump to the end of the input (at 0DH)
+    MOV BYTE PTR [BX], '$'   ; Replace 0DH with '$' terminator
+    RET
+READ_STRING ENDP
 
 ; =============================================================
 ; STRLEN: Returns the length of a '$'-terminated string

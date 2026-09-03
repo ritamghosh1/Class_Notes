@@ -10,6 +10,7 @@
 .STACK 100H
 
 .DATA
+
     MSG_NUM1  DB 0DH, 0AH, 'Enter first number (0-9): $'
     MSG_OP    DB 0DH, 0AH, 'Enter operator (+, -, *, /): $'
     MSG_NUM2  DB 0DH, 0AH, 'Enter second number (0-9): $'

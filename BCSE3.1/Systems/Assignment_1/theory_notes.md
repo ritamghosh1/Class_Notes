@@ -381,3 +381,114 @@ q1.exe
 
 # Or use an emulator like emu8086 for step-by-step debugging
 ```
+
+---
+
+# 📝 Question 6: String Reversal and Common Substring Detection
+
+## 📖 Problem Statement
+Write a MASM program to read two strings, reverse the first string, and check if there is any common substring present between them. If a common substring is found, it should be printed.
+
+## 🧠 Methodology
+
+This problem involves **Input Acquisition**, **String Reversal**, and **Nested Character Matching**.
+
+1. **Input Acquisition (Buffered Input):**
+   - We utilize DOS interrupt `INT 21H, AH = 0AH` to capture two dynamic strings entered by the user from the keyboard (`BUF1` and `BUF2`).
+   - A sub-routine (`READ_STRING`) formats the end of the buffered input by replacing the terminal Carriage Return (`0DH`) with the standard DOS string terminator (`$`).
+
+2. **String Reversal (`STRREV`):**
+   - We utilize a classic two-pointer technique to reverse the first string (`BUF1`) in place.
+   - **Pointer 1 (`SI`)** points to the start of the string, while **Pointer 2 (`DI`)** iterates forward until it locates the `$` terminator, then steps backward by one to point to the final character.
+   - We enter a loop where the characters at `SI` and `DI` are swapped. `SI` is incremented and `DI` is decremented. 
+   - The loop terminates when `SI` meets or crosses `DI` (`JAE REVERSE_DONE`), indicating the string is fully reversed.
+
+3. **Substring Detection & Printing:**
+   - To check if the reversed string shares any common substring with the second string, we use an $O(M \times N)$ nested loop structure.
+   - **Outer Loop (`SI`):** Iterates through each character of the reversed `STR1`.
+   - **Inner Loop (`DI`):** For each character in `STR1`, it scans the entirety of `STR2`.
+   - If a match is found (`CMP AL, BL`), we immediately jump to a success handler (`FOUND_MATCH`).
+   - The success handler then loops through both strings starting from the matching characters (`SI` and `DI`) and prints characters sequentially to the console using `INT 21H, AH = 02H` as long as they continue to match. 
+   - If they differ, the printing stops and the program exits.
+
+## 💻 Code Explanation
+
+### 1. Reversing the String (`STRREV`)
+```assembly
+    MOV DI, SI
+FIND_END:
+    MOV AL, [DI]
+    CMP AL, '$'
+    JE FOUND_END
+    INC DI
+    JMP FIND_END
+
+FOUND_END:
+    DEC DI                   
+```
+- First, we scan `STR1` to find its exact end. `DI` increments until the `$` is found, then backs up by one. Now `SI` points to the start, and `DI` points to the end.
+
+```assembly
+REVERSE_LOOP:
+    CMP SI, DI
+    JAE REVERSE_DONE         
+
+    MOV AL, [SI]             
+    MOV BL, [DI]
+    MOV [SI], BL
+    MOV [DI], AL
+
+    INC SI
+    DEC DI
+    JMP REVERSE_LOOP
+```
+- We swap the bytes in memory. `AL` gets the front character, `BL` gets the back character, and we write them to opposite locations. The pointers then move inward.
+
+### 2. Searching for Common Substrings
+```assembly
+    LEA SI, BUF1 + 2       ; Outer loop pointer (Reversed String)
+OUTER_1:
+    MOV AL, [SI]
+    CMP AL, '$'            ; Are we done scanning the first string?
+    JE NOT_FOUND
+
+    LEA DI, BUF2 + 2       ; Inner loop pointer (Second String)
+OUTER_2:
+    MOV BL, [DI]
+    CMP BL, '$'            
+    JE NEXT_OUTER_1        ; If second string ends, move to next char in first string
+
+    CMP AL, BL             ; Compare character
+    JE FOUND_MATCH         ; Match found!
+
+    INC DI                 ; Move to next char in second string
+    JMP OUTER_2
+```
+- We load the data block of `BUF1` starting at index 2 (skipping the DOS buffer headers). 
+- `SI` holds the current character of the reversed string. We load `DI` with the start of the second string and scan it entirely looking for `AL == BL`. 
+
+### 3. Printing the Match
+```assembly
+FOUND_MATCH:
+    MOV BP, SI
+    MOV BX, DI
+PRINT_MATCH_LOOP:
+    MOV AL, [BP]           ; Char from reversed STR1
+    MOV DL, [BX]           ; Char from STR2
+    
+    CMP AL, '$'            ; Reached end of STR1?
+    JE EXIT_PROG
+    CMP DL, '$'            ; Reached end of STR2?
+    JE EXIT_PROG
+    
+    CMP AL, DL             ; Do they still match?
+    JNE EXIT_PROG          ; If they differ, we are done printing
+
+    MOV AH, 02H            ; Print the matching character
+    INT 21H
+
+    INC BP
+    INC BX
+    JMP PRINT_MATCH_LOOP
+```
+- Once a match is detected, temporary registers `BP` and `BX` are used to iterate through both strings. As long as the characters match, they are printed to the console sequentially.

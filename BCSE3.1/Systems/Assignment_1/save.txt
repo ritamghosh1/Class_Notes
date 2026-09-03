@@ -1,0 +1,1 @@
+masm prog to reverse string and cmp if there is any common substring present
