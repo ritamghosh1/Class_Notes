@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# LaTeX Compilation Artifacts
+*.aux
+*.log
+*.out
+*.fls
+*.fdb_latexmk
+
+# Tectonic Downloaded Binaries (Avoid pushing large binaries to git)
+tectonic
+*.tar.gz
