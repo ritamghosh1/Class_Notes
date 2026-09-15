@@ -1,0 +1,2 @@
+<#no of resources> 4 <#no of instances of each resource> 2 4 5 3
+<#no of processes> 3 <#no of instances of each resource that each process needs in its lifetime separated by ","> 1 1 1 1, 2 3 1 2, 2 2 1 3

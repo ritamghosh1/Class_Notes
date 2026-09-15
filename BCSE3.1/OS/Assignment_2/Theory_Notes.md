@@ -123,6 +123,269 @@ By establishing this relationship over a pipe in a loop, we enforce strict order
 
 ---
 
+## Problem 3: Inter-Process Communication (IPC) Mechanisms
+
+**The Goal:** Implement three different applications using three distinct IPC mechanisms: Pipes, FIFOs (Named Pipes), and Message Queues.
+
+### IPC Mechanisms Overview
+
+1. **Pipes (Unnamed Pipes):**
+   - **Concept:** A simple, unidirectional byte stream between related processes (parent and child).
+   - **System Calls:** `pipe(int fd[2])`, `read()`, `write()`.
+   - **Use Case:** Best for straightforward, 1-to-1 communication where processes share a common ancestor. For bidirectional communication, two pipes are required.
+
+2. **FIFOs (Named Pipes):**
+   - **Concept:** Similar to unnamed pipes, but they exist as actual files in the filesystem (e.g., `/tmp/myfifo`).
+   - **System Calls:** `mkfifo(const char *pathname, mode_t mode)`, followed by standard file `open()`, `read()`, `write()`.
+   - **Use Case:** Allows communication between unrelated processes. They persist even after processes terminate until explicitly unlinked.
+
+3. **Message Queues (System V):**
+   - **Concept:** A linked list of messages stored within the kernel, identified by a unique message queue identifier.
+   - **System Calls:** `msgget()` (create/access), `msgsnd()` (send), `msgrcv()` (receive), `msgctl()` (control/delete).
+   - **Use Case:** Supports complex communication patterns, including 1-to-many. Messages are strongly typed (via `mtype`), allowing processes to selectively receive specific messages (e.g., broadcast vs. targeted messages).
+
+### Part A: Broadcasting Weather Information (Message Queue)
+- **Design:** One broadcaster sends updates to multiple listeners.
+- **Why Message Queue:** System V message queues allow attaching a `type` (`mtype`) to each message. The broadcaster can send the same weather update multiple times, each with a different `mtype` corresponding to a specific listener. Each listener calls `msgrcv()` requesting only its specific `mtype`, ensuring every listener gets a copy of the broadcast without interfering with others.
+
+### Part B: Telephonic Conversation (Pipes)
+- **Design:** Bidirectional communication between a caller (parent) and a receiver (child).
+- **Why Pipes:** Since the caller and receiver are related (parent/child via `fork`), unnamed pipes are the most efficient mechanism. To achieve full-duplex (two-way) communication, we use two pipes: one for Caller → Receiver, and another for Receiver → Caller. They alternate reading and writing to simulate a conversation.
+
+### Part C: Broadcast with Listener Replies (Named FIFOs)
+- **Design:** One broadcaster sends updates to listeners; listeners can reply back.
+- **Why Named FIFOs:** We create a separate FIFO for each direction and each listener (e.g., a broadcast FIFO and a reply FIFO per listener). `mkfifo` creates these named pipes in the filesystem. The broadcaster opens the broadcast FIFOs for writing and reply FIFOs for reading. Listeners do the opposite. This structure clearly separates the broadcast channel from the individual reply channels, allowing bidirectional, structured communication even if the processes were unrelated.
+
+---
+
+## Problem 4: CPU Scheduling Algorithms
+
+**The Goal:** Build a scheduler that reads job execution profiles from a file and simulates three different CPU scheduling algorithms: **FCFS**, **Non-Preemptive Priority**, and **Round Robin (quantum=16)**. Compare the average waiting time and turnaround time across all three.
+
+### The Theory (CPU Scheduling)
+
+The **CPU Scheduler** is the OS component that decides which process in the **ready queue** gets to use the CPU next. Different scheduling algorithms lead to different performance characteristics. Understanding these trade-offs is fundamental to OS design.
+
+#### Key Terminology
+
+| Term | Definition |
+|---|---|
+| **Arrival Time** | The time at which a process enters the ready queue. |
+| **CPU Burst** | A period of time during which a process is executing instructions on the CPU. |
+| **I/O Burst** | A period of time during which a process is waiting for an I/O operation to complete (e.g., disk read). The CPU is free during this time. |
+| **Burst Cycle** | A process alternates between CPU bursts and I/O bursts: `CPU → I/O → CPU → I/O → ... → CPU` |
+| **Completion Time (CT)** | The time at which a process finishes all its bursts. |
+| **Turnaround Time (TAT)** | Total time from arrival to completion: `TAT = CT - Arrival Time` |
+| **Waiting Time (WT)** | Time spent waiting in the ready queue (not executing, not doing I/O): `WT = TAT - Total CPU Burst Time - Total I/O Burst Time` |
+| **Response Time** | Time from arrival to the first time the process gets the CPU. |
+
+#### Process State Transitions
+
+```
+                  ┌──────────────┐
+    Arrival       │              │   CPU Burst
+   ──────────────>│  Ready Queue │──────────────> Running
+                  │              │                   │
+                  └──────────────┘                   │
+                        ▲                            │
+                        │                            ▼
+                        │          I/O Burst    ┌─────────┐
+                        └──────────────────────│  I/O    │
+                          (I/O complete)        │  Wait   │
+                                                └─────────┘
+```
+
+When a process finishes a CPU burst:
+- If it has more bursts, it goes to **I/O Wait** (the next burst is always I/O)
+- If it has no more bursts, it **terminates**
+
+When an I/O burst finishes:
+- The process returns to the **Ready Queue** for its next CPU burst
+- If there are no more bursts, it **terminates** (edge case: job ends with I/O)
+
+---
+
+### Algorithm 1: FCFS (First Come, First Served)
+
+**Concept:** The simplest scheduling algorithm. Processes are executed in the exact order they arrive in the ready queue. It is **non-preemptive** — once a process starts its CPU burst, it runs to completion of that burst.
+
+**How it works:**
+1. All arrived processes are placed in a FIFO (First-In, First-Out) queue.
+2. The process at the front of the queue gets the CPU.
+3. It runs its entire current CPU burst without interruption.
+4. After the CPU burst, if there's an I/O burst, the process goes to I/O and the next process in the queue gets the CPU.
+5. When the I/O completes, the process re-enters the back of the ready queue.
+
+**Pros:** Simple to implement, no starvation (every process eventually gets the CPU).
+**Cons:** **Convoy Effect** — short processes stuck behind long ones get poor turnaround times. Not optimal for interactive systems.
+
+**Example:**
+```
+Jobs: J1(arrival=0, CPU=32), J2(arrival=4, CPU=64)
+Timeline: |---J1(0-32)---|---J2(32-96)---|
+J1 WT = 0, J2 WT = 28 (waited from t=4 to t=32)
+```
+
+---
+
+### Algorithm 2: Non-Preemptive Priority Scheduling
+
+**Concept:** Each process has a priority number. The process with the **highest priority** (lowest priority number in our convention) is selected from the ready queue. Like FCFS, it is **non-preemptive** — the running process keeps the CPU until its current burst finishes.
+
+**How it works:**
+1. When the CPU is free, scan the ready queue.
+2. Select the process with the lowest priority number (highest priority).
+3. Ties are broken by arrival time (earlier arrival wins).
+4. The selected process runs its entire CPU burst.
+5. After finishing, the next highest-priority ready process is chosen.
+
+**Pros:** Important/critical jobs get CPU first.
+**Cons:** **Starvation** — low-priority processes may never get the CPU if high-priority processes keep arriving. Can be mitigated with **aging** (gradually increasing priority of waiting processes).
+
+**Example:**
+```
+Jobs: J1(priority=3, arrival=0), J2(priority=1, arrival=4)
+At t=32 (J1's burst done): J2 is picked next because priority 1 > priority 3
+```
+
+---
+
+### Algorithm 3: Round Robin (RR)
+
+**Concept:** A preemptive algorithm designed for time-sharing systems. Each process gets a fixed **time quantum** (time slice) of CPU time. If the process doesn't finish its CPU burst within the quantum, it is **preempted** (interrupted) and moved to the back of the ready queue.
+
+**How it works:**
+1. Processes are placed in a circular FIFO queue.
+2. The process at the front gets the CPU for at most `quantum` time units.
+3. **Case A:** If the CPU burst finishes within the quantum → process moves to I/O or terminates.
+4. **Case B:** If the CPU burst is longer than the quantum → process is preempted after `quantum` units, remaining burst time is saved, and it's placed at the back of the ready queue.
+
+**Time Quantum = 16** (as specified in the problem).
+
+**Pros:** Fair — every process gets equal CPU time. Good for interactive systems. No starvation.
+**Cons:** Higher context-switching overhead. Performance depends heavily on quantum size:
+- **Too small quantum** → excessive context switches, poor throughput
+- **Too large quantum** → degrades to FCFS
+
+**Example:**
+```
+J1(CPU=32), J2(CPU=48), quantum=16
+Timeline: |J1(16)|J2(16)|J1(16)|J2(16)|J2(16)|
+J1 gets preempted after first 16 units, J2 gets a turn, then J1 finishes, then J2 finishes.
+```
+
+---
+
+### Implementation Guide (`qs4.cpp`)
+
+#### 1. Input File Format
+
+Each line represents one job:
+```
+<Job-id> <priority> <arrival-time> <CPU-burst(1)> <I/O-burst(1)> <CPU-burst(2)> ... -1
+```
+
+Bursts alternate: CPU, I/O, CPU, I/O, ..., and the profile ends with `-1`.
+A job may end with either a CPU burst or an I/O burst.
+
+**Example:** `2 3 0 32 64 16 32 -1` means:
+- Job ID: 2, Priority: 3, Arrival: 0
+- CPU(32) → I/O(64) → CPU(16) → I/O(32)
+
+#### 2. Data Structures
+
+```cpp
+struct Burst {
+  char type; // 'C' for CPU, 'I' for I/O
+  int duration;
+};
+
+struct Job {
+  int id;
+  int priority;
+  int arrival_time;
+  vector<Burst> bursts;  // alternating CPU and I/O
+};
+
+struct JobState {
+  // ... runtime state for simulation
+  int current_burst_idx;  // which burst we're on
+  int remaining;          // remaining time in current burst
+  int completion_time, turnaround_time, waiting_time;
+  int last_ready_time;    // when job last entered the ready queue
+};
+```
+
+#### 3. Core Simulation Pattern
+
+All three algorithms follow the same event-driven simulation loop:
+
+```
+while (not all jobs done):
+    1. Add newly arrived jobs to the ready queue
+    2. Process completed I/O bursts (move jobs back to ready queue)
+    3. If ready queue is empty → fast-forward time to next event
+    4. Select a job from the ready queue (algorithm-specific selection)
+    5. Run the job's CPU burst (fully for FCFS/Priority, up to quantum for RR)
+    6. After burst:
+       - If job has more bursts → queue I/O burst
+       - If job is done → record completion time
+    7. Handle new arrivals and I/O completions that occurred during the burst
+```
+
+#### 4. Key Implementation Details
+
+**Waiting Time Tracking:**
+- When a job enters the ready queue, record `last_ready_time = current_time`
+- When a job is picked from the ready queue, accumulate: `waiting_time += (current_time - last_ready_time)`
+- This correctly handles multiple ready-queue entries (after I/O or preemption)
+
+**I/O Queue (min-heap):**
+- Use a priority queue ordered by I/O completion time
+- When an I/O completes, advance `current_burst_idx` and check:
+  - If the job is finished → record completion
+  - Otherwise → add to ready queue with the next CPU burst
+
+**Fast-Forward:**
+When the ready queue is empty but jobs are still pending:
+- Find the minimum of: next job arrival time, next I/O completion time
+- Jump time forward to that event (avoids busy-waiting)
+
+**Edge Case — Jobs Ending with I/O:**
+A job's burst sequence might end with an I/O burst (e.g., `CPU→I/O→CPU→I/O`).
+When the final I/O completes:
+- The job is finished — record `completion_time = I/O_end_time`
+- **This is a common bug** to miss (only checking completion after CPU bursts)
+
+#### 5. Algorithm-Specific Ready Queue Selection
+
+| Algorithm | Selection Rule |
+|---|---|
+| **FCFS** | `queue<int>` — FIFO, pick `front()` |
+| **Priority** | Scan all ready jobs, pick the one with lowest priority number. Tie-break by arrival time. |
+| **Round Robin** | `queue<int>` — FIFO like FCFS, but run for `min(quantum, remaining)`. If preempted, push back to queue. |
+
+#### 6. Computing Final Metrics
+
+```cpp
+Turnaround Time = Completion Time - Arrival Time
+Waiting Time = (accumulated from ready-queue waits)
+// Equivalently: WT = TAT - Total CPU burst time - Total I/O burst time
+```
+
+#### 7. Comparison Output
+
+After running all three algorithms on the same job set, compare:
+- **Average TAT** — lower is better (jobs finish sooner)
+- **Average WT** — lower is better (less idle waiting)
+
+Typically:
+- **FCFS**: Simplest, but convoy effect hurts short jobs
+- **Priority**: Good for critical jobs, but can starve low-priority ones
+- **Round Robin**: Fairest, but quantum tuning is critical
+
+---
+
 ## Problem 5: Deadlock Avoidance (Banker's Algorithm)
 
 **The Goal:** Write a program to determine if a system is in a "safe state" and whether a specific resource request from a process should be granted without leading to a deadlock.
