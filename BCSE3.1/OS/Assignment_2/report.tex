@@ -1,0 +1,1165 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[margin=2.5cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage[most]{tcolorbox}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{listings}
+\usepackage{parskip}
+\usepackage{hyperref}
+
+% ── Colors ────────────────────────────────────────────────
+\definecolor{black}{HTML}{000000}
+\definecolor{darkgray}{HTML}{333333}
+\definecolor{midgray}{HTML}{666666}
+\definecolor{lightgray}{HTML}{F0F0F0}
+\definecolor{rulegray}{HTML}{CCCCCC}
+\definecolor{kwblue}{HTML}{003399}
+\definecolor{strgreen}{HTML}{006633}
+\definecolor{cmtgray}{HTML}{999999}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=darkgray,
+    urlcolor=darkgray,
+    citecolor=darkgray,
+    pdftitle={Operating Systems Lab -- Assignment 2},
+    pdfauthor={Ritam Ghosh},
+}
+
+% ── Header / Footer ──────────────────────────────────────
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\textsc{Operating Systems Lab --- Assignment 2}}
+\fancyhead[R]{\small\textsc{Ritam Ghosh \textbar\ 002410501040}}
+\fancyfoot[C]{\small\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+
+% ── Section Formatting ────────────────────────────────────
+\titleformat{\section}
+  {\large\bfseries\scshape}{\thesection.}{0.6em}{}
+  [\vspace{0.3em}{\color{rulegray}\rule{\linewidth}{0.6pt}}\vspace{0.5em}]
+
+\titleformat{\subsection}
+  {\normalsize\bfseries}{\thesubsection}{0.6em}{}
+
+% ── Code Listings ─────────────────────────────────────────
+\lstdefinestyle{cstyle}{
+    language=C,
+    basicstyle=\ttfamily\scriptsize,
+    backgroundcolor=\color{lightgray},
+    frame=single,
+    rulecolor=\color{rulegray},
+    keywordstyle=\color{kwblue}\bfseries,
+    stringstyle=\color{strgreen},
+    commentstyle=\color{cmtgray}\itshape,
+    numbers=left,
+    numberstyle=\tiny\color{cmtgray},
+    numbersep=8pt,
+    breaklines=true,
+    breakatwhitespace=true,
+    tabsize=4,
+    showstringspaces=false,
+    columns=flexible,
+    keepspaces=true,
+    xleftmargin=1.2em,
+    xrightmargin=0.5em,
+    aboveskip=0.6em,
+    belowskip=0.6em,
+    morekeywords={pid_t, fork, pipe, read, write, close, usleep, wait,
+                  waitpid, printf, perror, exit, srand, rand, getpid,
+                  fflush, mkfifo, open, unlink, msgsnd, msgrcv, msgget,
+                  msgctl, ftok, strncpy, snprintf, atoi, strtok, fgets,
+                  IPC_CREAT, IPC_RMID, O_RDONLY, O_WRONLY, NULL, STDIN_FILENO}
+}
+
+\lstdefinestyle{cppstyle}{
+    language=C++,
+    basicstyle=\ttfamily\scriptsize,
+    backgroundcolor=\color{lightgray},
+    frame=single,
+    rulecolor=\color{rulegray},
+    keywordstyle=\color{kwblue}\bfseries,
+    stringstyle=\color{strgreen},
+    commentstyle=\color{cmtgray}\itshape,
+    numbers=left,
+    numberstyle=\tiny\color{cmtgray},
+    numbersep=8pt,
+    breaklines=true,
+    breakatwhitespace=true,
+    tabsize=4,
+    showstringspaces=false,
+    columns=flexible,
+    keepspaces=true,
+    xleftmargin=1.2em,
+    xrightmargin=0.5em,
+    aboveskip=0.6em,
+    belowskip=0.6em,
+    morekeywords={vector, queue, priority_queue, string, pair, ifstream,
+                  ofstream, cout, cerr, endl, string, to_string, sort,
+                  min, max, fixed, setprecision, setw, left, right, INT_MAX}
+}
+
+\lstdefinestyle{outputstyle}{
+    basicstyle=\ttfamily\scriptsize,
+    backgroundcolor=\color{lightgray},
+    frame=single,
+    rulecolor=\color{rulegray},
+    numbers=none,
+    breaklines=true,
+    breakatwhitespace=true,
+    tabsize=4,
+    showstringspaces=false,
+    columns=flexible,
+    keepspaces=true,
+    xleftmargin=0.8em,
+    xrightmargin=0.5em,
+    aboveskip=0.4em,
+    belowskip=0.4em,
+}
+
+% ── Boxes ─────────────────────────────────────────────────
+\newtcolorbox{questionbox}{
+    colback=white,
+    colframe=darkgray,
+    fonttitle=\bfseries,
+    title={Question},
+    arc=0mm,
+    boxrule=0.5pt,
+    left=4pt, right=4pt, top=2pt, bottom=2pt,
+    breakable,
+}
+
+\newtcolorbox{theorybox}{
+    colback=white,
+    colframe=darkgray,
+    coltitle=white,
+    fonttitle=\bfseries,
+    title={Theory},
+    arc=0mm,
+    boxrule=0.5pt,
+    left=4pt, right=4pt, top=2pt, bottom=2pt,
+    breakable,
+}
+
+\newtcolorbox{outputbox}[1][]{
+    colback=white,
+    colframe=rulegray,
+    fonttitle=\bfseries\small,
+    title={Output},
+    arc=0mm,
+    boxrule=0.4pt,
+    left=4pt, right=4pt, top=2pt, bottom=2pt,
+    breakable,
+    #1
+}
+
+\newtcolorbox{codebox}[1][]{
+    colback=white,
+    colframe=rulegray,
+    arc=0mm,
+    boxrule=0.4pt,
+    left=2pt, right=2pt, top=2pt, bottom=2pt,
+    breakable,
+    #1
+}
+
+% ── Title Page ────────────────────────────────────────────
+\title{}
+\date{}
+\author{}
+
+\begin{document}
+
+% ── Custom Title Page ─────────────────────────────────────
+\thispagestyle{empty}
+\begin{center}
+\vspace*{1cm}
+
+{\large\textsc{Jadavpur University}}\\[0.2cm]
+{\normalsize\textsc{Kolkata, West Bengal}}\\[0.8cm]
+
+{\color{rulegray}\rule{0.7\linewidth}{1pt}}\\[0.8cm]
+
+{\LARGE\bfseries\textsc{Operating Systems Laboratory}}\\[0.4cm]
+{\Large\textsc{Assignment --- II}}\\[0.8cm]
+
+{\color{rulegray}\rule{0.7\linewidth}{1pt}}\\[1.2cm]
+
+\begin{tabular}{rl}
+\textbf{Name} & Ritam Ghosh \\[0.3cm]
+\textbf{Roll No.} & 002410501040 \\[0.3cm]
+\textbf{Section} & BCSE3.1 \\[0.3cm]
+\textbf{Semester} & 3 (2026--27) \\[0.3cm]
+\textbf{Subject} & Operating Systems Lab (CS39002) \\
+\end{tabular}
+
+\vfill
+
+{\color{rulegray}\rule{0.7\linewidth}{1pt}}\\[0.3cm]
+{\small\today}
+\end{center}
+
+\newpage
+\setcounter{page}{1}
+
+% ══════════════════════════════════════════════════════════
+%  QUESTION 1
+% ══════════════════════════════════════════════════════════
+\section{IPC Synchronization using Pipes}
+
+\begin{questionbox}
+Two processes, Process X and Process Y, interact with data $x$ and $y$. Process X writes $x$ and reads $y$; Process Y writes $y$ and reads $x$. Ensure proper synchronization using \texttt{fork()} and pipes.
+\end{questionbox}
+
+\begin{theorybox}
+A \textbf{pipe} is a unidirectional IPC channel with a write end and a read end. Its key property is \emph{blocking}: a \texttt{read()} on an empty pipe suspends the calling process until data is written.
+
+Two pipes are used for bidirectional flow:
+\begin{itemize}[nosep]
+    \item Pipe 1 ($x$ flow): X writes, Y reads.
+    \item Pipe 2 ($y$ flow): Y writes, X reads.
+\end{itemize}
+
+Both processes follow a \texttt{Write} then \texttt{Read} pattern. If the peer has not yet written, the read blocks, providing synchronization without explicit locks.
+\end{theorybox}
+
+\subsection*{Source Code}
+\begin{codebox}
+\begin{lstlisting}[style=cstyle]
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
+
+int main() {
+  int pipe1[2], pipe2[2];
+  if (pipe(pipe1) == -1 || pipe(pipe2) == -1) {
+    perror("Pipe creation failed");
+    return 1;
+  }
+
+  pid_t pid = fork();
+  if (pid > 0) {
+    // Process X (Parent)
+    close(pipe1[0]);
+    close(pipe2[1]);
+
+    int x = 100;
+    printf("Process X is writing %d\n", x);
+    write(pipe1[1], &x, sizeof(x));
+
+    int y_read;
+    printf("Process X is waiting to read \n");
+    read(pipe2[0], &y_read, sizeof(y_read));
+    printf("Process X read %d\n", y_read);
+
+    close(pipe1[1]);
+    close(pipe2[0]);
+  } else {
+    // Process Y (Child)
+    close(pipe1[1]);
+    close(pipe2[0]);
+
+    int y = 200;
+    printf("Process Y is writing %d\n", y);
+    write(pipe2[1], &y, sizeof(y));
+
+    int x_read;
+    printf("Process Y is waiting to read \n");
+    read(pipe1[0], &x_read, sizeof(x_read));
+    printf("Process Y read %d\n", x_read);
+
+    close(pipe1[0]);
+    close(pipe2[1]);
+  }
+  return 0;
+}
+\end{lstlisting}
+\end{codebox}
+
+\subsection*{Output}
+\begin{outputbox}
+\begin{lstlisting}[style=outputstyle]
+Process X is writing 100
+Process X is waiting to read
+Process X read 200
+Process Y is writing 200
+Process Y is waiting to read
+Process Y read 100
+\end{lstlisting}
+\end{outputbox}
+
+\newpage
+
+% ══════════════════════════════════════════════════════════
+%  QUESTION 2
+% ══════════════════════════════════════════════════════════
+\section{Process Interleaving and Strict Synchronization}
+
+\begin{questionbox}
+\textbf{(a)} Create two child processes X and Y that each run $N$ iterations, printing their identity and iteration number with random sleep.\\
+\textbf{(b)} Enforce strict alternation: Y cannot start iteration $i$ until X finishes iteration $i-1$.
+\end{questionbox}
+
+\begin{theorybox}
+\textbf{Process Interleaving.} The OS scheduler uses time-slicing to multiplex processes. Random \texttt{usleep()} calls force context switches, producing non-deterministic output order each run.
+
+\textbf{Strict Synchronization.} A pipe carries a token from X to Y. After each iteration, X writes a token; at the start of each iteration, Y reads it. The blocking property of \texttt{read()} ensures Y waits until X finishes.
+\end{theorybox}
+
+\subsection*{Part (a) --- \texttt{qs2a.c}}
+\begin{codebox}
+\begin{lstlisting}[style=cstyle]
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <time.h>
+
+#define ITERATIONS 10
+
+void run_child(const char* name) {
+    srand(time(NULL) ^ getpid());
+    for (int i = 1; i <= ITERATIONS; i++) {
+        printf("Process %s - Iteration %d\n", name, i);
+        fflush(stdout);
+        usleep(rand() % 100000);
+    }
+    exit(0);
+}
+
+int main() {
+    pid_t pid_x = fork();
+    if (pid_x < 0) { perror("Fork failed for X"); exit(1); }
+    else if (pid_x == 0) { run_child("X"); }
+
+    pid_t pid_y = fork();
+    if (pid_y < 0) { perror("Fork failed for Y"); exit(1); }
+    else if (pid_y == 0) { run_child("Y"); }
+
+    wait(NULL);
+    wait(NULL);
+    printf("Both processes finished.\n");
+    return 0;
+}
+\end{lstlisting}
+\end{codebox}
+
+\subsection*{Output --- Part (a)}
+\begin{outputbox}
+\begin{lstlisting}[style=outputstyle]
+Process X - Iteration 1
+Process Y - Iteration 1
+Process Y - Iteration 2
+Process Y - Iteration 3
+Process X - Iteration 2
+Process Y - Iteration 4
+Process Y - Iteration 5
+Process X - Iteration 3
+Process X - Iteration 4
+Process Y - Iteration 6
+Process X - Iteration 5
+Process Y - Iteration 7
+Process X - Iteration 6
+Process X - Iteration 7
+Process Y - Iteration 8
+Process X - Iteration 8
+Process Y - Iteration 9
+Process Y - Iteration 10
+Process X - Iteration 9
+Process X - Iteration 10
+Both processes finished.
+\end{lstlisting}
+\end{outputbox}
+
+\subsection*{Part (b) --- \texttt{qs2b.c}}
+\begin{codebox}
+\begin{lstlisting}[style=cstyle]
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <time.h>
+#include <unistd.h>
+
+#define ITERATIONS 10
+
+int main() {
+  int pipe_xy[2], pipe_yx[2];
+  if (pipe(pipe_xy) == -1 || pipe(pipe_yx) == -1) {
+    perror("Pipe creation failed");
+    return 1;
+  }
+
+  pid_t pid = fork();
+  if (pid < 0) { perror("Fork failed"); exit(1); }
+
+  srand(time(NULL) ^ getpid());
+  int token = 1;
+
+  if (pid > 0) {
+    // PROCESS X (Parent)
+    close(pipe_xy[0]);
+    close(pipe_yx[1]);
+
+    for (int i = 1; i <= ITERATIONS; i++) {
+      printf("Process X - Iteration %d\n", i);
+      fflush(stdout);
+      usleep(rand() % 100000);
+      write(pipe_xy[1], &token, sizeof(token));
+      if (i < ITERATIONS) {
+        read(pipe_yx[0], &token, sizeof(token));
+      }
+    }
+    close(pipe_xy[1]);
+    close(pipe_yx[0]);
+    wait(NULL);
+    printf("Both processes finished.\n");
+  } else {
+    // PROCESS Y (Child)
+    close(pipe_xy[1]);
+    close(pipe_yx[0]);
+
+    for (int i = 1; i <= ITERATIONS; i++) {
+      read(pipe_xy[0], &token, sizeof(token));
+      printf("Process Y - Iteration %d\n", i);
+      fflush(stdout);
+      usleep(rand() % 100000);
+      if (i < ITERATIONS) {
+        write(pipe_yx[1], &token, sizeof(token));
+      }
+    }
+    close(pipe_xy[0]);
+    close(pipe_yx[1]);
+    exit(0);
+  }
+  return 0;
+}
+\end{lstlisting}
+\end{codebox}
+
+\subsection*{Output --- Part (b)}
+\begin{outputbox}
+\begin{lstlisting}[style=outputstyle]
+Process X - Iteration 1
+Process Y - Iteration 1
+Process X - Iteration 2
+Process Y - Iteration 2
+Process X - Iteration 3
+Process Y - Iteration 3
+Process X - Iteration 4
+Process Y - Iteration 4
+Process X - Iteration 5
+Process Y - Iteration 5
+Process X - Iteration 6
+Process Y - Iteration 6
+Process X - Iteration 7
+Process Y - Iteration 7
+Process X - Iteration 8
+Process Y - Iteration 8
+Process X - Iteration 9
+Process Y - Iteration 9
+Process X - Iteration 10
+Process Y - Iteration 10
+Both processes finished.
+\end{lstlisting}
+\end{outputbox}
+
+\newpage
+
+% ══════════════════════════════════════════════════════════
+%  QUESTION 3
+% ══════════════════════════════════════════════════════════
+\section{IPC Mechanisms: Pipes, FIFOs, and Message Queues}
+
+\begin{questionbox}
+Implement three IPC applications:
+\begin{enumerate}[nosep]
+    \item[(a)] Weather broadcast using \textbf{Message Queues} (System V).
+    \item[(b)] Telephonic conversation using \textbf{unnamed Pipes}.
+    \item[(c)] Broadcast with listener replies using \textbf{named FIFOs}.
+\end{enumerate}
+\end{questionbox}
+
+\begin{theorybox}
+\begin{itemize}[nosep]
+    \item \textbf{Pipes:} Unidirectional byte streams between related processes. Two pipes are needed for bidirectional communication.
+    \item \textbf{FIFOs (Named Pipes):} Filesystem entries that allow IPC between unrelated processes via \texttt{mkfifo()}.
+    \item \textbf{Message Queues (System V):} Kernel-managed linked lists of typed messages. The \texttt{mtype} field enables selective reception by different listeners.
+\end{itemize}
+\end{theorybox}
+
+\subsection*{Part (a) --- Weather Broadcast (\texttt{qs3a.c})}
+\begin{codebox}
+\begin{lstlisting}[style=cstyle]
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/ipc.h>
+#include <sys/msg.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
+
+#define NUM_LISTENERS 3
+#define NUM_BROADCASTS 5
+#define MSG_SIZE 128
+
+struct msgbuf {
+  long mtype;
+  char mtext[MSG_SIZE];
+};
+
+void listener(int msgid, int listener_id) {
+  struct msgbuf msg;
+  long my_type = listener_id + 1;
+  printf("  [Listener %d] Started (PID: %d), listening on mtype=%ld\n",
+         listener_id, getpid(), my_type);
+  fflush(stdout);
+  while (1) {
+    if (msgrcv(msgid, &msg, MSG_SIZE, my_type, 0) == -1) {
+      perror("  msgrcv"); exit(1);
+    }
+    if (strcmp(msg.mtext, "END") == 0) {
+      printf("  [Listener %d] Received END. Exiting.\n", listener_id);
+      fflush(stdout); break;
+    }
+    printf("  [Listener %d] Received: \"%s\"\n", listener_id, msg.mtext);
+    fflush(stdout);
+  }
+  exit(0);
+}
+
+int main() {
+  printf("========================================\n");
+  printf("  3a: Weather Broadcast (Message Queue)\n");
+  printf("========================================\n\n");
+  key_t key = ftok("/tmp", 'W');
+  if (key == -1) { perror("ftok"); return 1; }
+  int msgid = msgget(key, IPC_CREAT | 0666);
+  if (msgid == -1) { perror("msgget"); return 1; }
+  printf("  [Broadcaster] Message queue created (id=%d)\n\n", msgid);
+  fflush(stdout);
+
+  pid_t pids[NUM_LISTENERS];
+  for (int i = 0; i < NUM_LISTENERS; i++) {
+    pids[i] = fork();
+    if (pids[i] < 0) { perror("fork"); return 1; }
+    if (pids[i] == 0) { listener(msgid, i); exit(0); }
+  }
+  usleep(100000);
+
+  const char *weather[] = {"Sunny, 32C, Humidity 45%",
+    "Partly Cloudy, 28C, Wind 15km/h", "Thunderstorm Warning, 24C",
+    "Clear Skies, 30C, UV Index High", "Light Rain, 22C, Humidity 80%"};
+
+  struct msgbuf msg;
+  for (int b = 0; b < NUM_BROADCASTS; b++) {
+    printf("\n  [Broadcaster] Sending: \"%s\"\n", weather[b]);
+    fflush(stdout);
+    for (int i = 0; i < NUM_LISTENERS; i++) {
+      msg.mtype = i + 1;
+      strncpy(msg.mtext, weather[b], MSG_SIZE - 1);
+      msg.mtext[MSG_SIZE - 1] = '\0';
+      if (msgsnd(msgid, &msg, strlen(msg.mtext) + 1, 0) == -1) {
+        perror("  msgsnd"); return 1;
+      }
+    }
+    usleep(200000);
+  }
+
+  printf("\n  [Broadcaster] Sending END to all.\n");
+  fflush(stdout);
+  for (int i = 0; i < NUM_LISTENERS; i++) {
+    msg.mtype = i + 1;
+    strncpy(msg.mtext, "END", MSG_SIZE);
+    if (msgsnd(msgid, &msg, strlen(msg.mtext) + 1, 0) == -1)
+      perror("  msgsnd END");
+  }
+  for (int i = 0; i < NUM_LISTENERS; i++) waitpid(pids[i], NULL, 0);
+  if (msgctl(msgid, IPC_RMID, NULL) == -1) perror("msgctl IPC_RMID");
+  else printf("\n  [Broadcaster] Queue removed. Done.\n");
+  return 0;
+}
+\end{lstlisting}
+\end{codebox}
+
+\subsection*{Output --- Part (a)}
+\begin{outputbox}
+\begin{lstlisting}[style=outputstyle]
+========================================
+  3a: Weather Broadcast (Message Queue)
+========================================
+
+  [Broadcaster] Message queue created (id=65536)
+
+  [Listener 0] Started (PID: 52047), listening on mtype=1
+  [Listener 1] Started (PID: 52048), listening on mtype=2
+  [Listener 2] Started (PID: 52049), listening on mtype=3
+
+  [Broadcaster] Sending: "Sunny, 32C, Humidity 45%"
+  [Listener 2] Received: "Sunny, 32C, Humidity 45%"
+  [Listener 0] Received: "Sunny, 32C, Humidity 45%"
+  [Listener 1] Received: "Sunny, 32C, Humidity 45%"
+
+  [Broadcaster] Sending: "Partly Cloudy, 28C, Wind 15km/h"
+  [Listener 2] Received: "Partly Cloudy, 28C, Wind 15km/h"
+  [Listener 0] Received: "Partly Cloudy, 28C, Wind 15km/h"
+  [Listener 1] Received: "Partly Cloudy, 28C, Wind 15km/h"
+
+  [Broadcaster] Sending: "Thunderstorm Warning, 24C"
+  [Listener 2] Received: "Thunderstorm Warning, 24C"
+  [Listener 0] Received: "Thunderstorm Warning, 24C"
+  [Listener 1] Received: "Thunderstorm Warning, 24C"
+
+  [Broadcaster] Sending: "Clear Skies, 30C, UV Index High"
+  [Listener 1] Received: "Clear Skies, 30C, UV Index High"
+  [Listener 0] Received: "Clear Skies, 30C, UV Index High"
+  [Listener 2] Received: "Clear Skies, 30C, UV Index High"
+
+  [Broadcaster] Sending: "Light Rain, 22C, Humidity 80%"
+  [Listener 0] Received: "Light Rain, 22C, Humidity 80%"
+  [Listener 2] Received: "Light Rain, 22C, Humidity 80%"
+  [Listener 1] Received: "Light Rain, 22C, Humidity 80%"
+
+  [Broadcaster] Sending END signal to all listeners.
+  [Listener 2] Received END signal. Exiting.
+  [Listener 0] Received END signal. Exiting.
+  [Listener 1] Received END signal. Exiting.
+
+  [Broadcaster] Message queue removed. Done.
+\end{lstlisting}
+\end{outputbox}
+
+\newpage
+
+\subsection*{Part (b) --- Telephonic Conversation (\texttt{qs3b.c})}
+\begin{codebox}
+\begin{lstlisting}[style=cstyle]
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
+
+#define MSG_SIZE 256
+#define NUM_EXCHANGES 4
+
+int main() {
+  printf("========================================\n");
+  printf("  3b: Telephonic Conversation (Pipe)\n");
+  printf("========================================\n\n");
+  fflush(stdout);
+
+  int pipe_c2r[2], pipe_r2c[2];
+  if (pipe(pipe_c2r) == -1 || pipe(pipe_r2c) == -1) {
+    perror("pipe"); return 1;
+  }
+
+  const char *caller_lines[] = {"Hello? Is this the Domino's Pizza?",
+    "I'd like to order a large pepperoni pizza.",
+    "Yes, with extra cheese please.", "Great, thanks! Goodbye."};
+  const char *receiver_lines[] = {
+    "Yes, this is Domino's! How can I help you?",
+    "Sure! Any toppings you'd like to add?",
+    "Got it! Your order will be ready in 30 minutes.",
+    "Thank you for calling! Goodbye."};
+
+  pid_t pid = fork();
+  if (pid < 0) { perror("fork"); return 1; }
+
+  char buf[MSG_SIZE];
+  if (pid > 0) {
+    // CALLER (Parent)
+    close(pipe_c2r[0]); close(pipe_r2c[1]);
+    for (int i = 0; i < NUM_EXCHANGES; i++) {
+      printf("  [Caller]   : %s\n", caller_lines[i]); fflush(stdout);
+      write(pipe_c2r[1], caller_lines[i], strlen(caller_lines[i]) + 1);
+      read(pipe_r2c[0], buf, MSG_SIZE);
+      printf("  [Caller]   hears: \"%s\"\n", buf); fflush(stdout);
+      usleep(300000);
+    }
+    close(pipe_c2r[1]); close(pipe_r2c[0]);
+    wait(NULL);
+    printf("\n  --- Call ended ---\n");
+  } else {
+    // RECEIVER (Child)
+    close(pipe_c2r[1]); close(pipe_r2c[0]);
+    for (int i = 0; i < NUM_EXCHANGES; i++) {
+      read(pipe_c2r[0], buf, MSG_SIZE);
+      printf("  [Receiver] hears: \"%s\"\n", buf); fflush(stdout);
+      usleep(200000);
+      printf("  [Receiver] : %s\n", receiver_lines[i]); fflush(stdout);
+      write(pipe_r2c[1], receiver_lines[i], strlen(receiver_lines[i]) + 1);
+    }
+    close(pipe_c2r[0]); close(pipe_r2c[1]);
+    exit(0);
+  }
+  return 0;
+}
+\end{lstlisting}
+\end{codebox}
+
+\subsection*{Output --- Part (b)}
+\begin{outputbox}
+\begin{lstlisting}[style=outputstyle]
+========================================
+  3b: Telephonic Conversation (Pipe)
+========================================
+
+  [Caller]   : Hello? Is this the Domino's Pizza?
+  [Receiver] hears: "Hello? Is this the Domino's Pizza?"
+  [Receiver] : Yes, this is Domino's! How can I help you?
+  [Caller]   hears: "Yes, this is Domino's! How can I help you?"
+  [Caller]   : I'd like to order a large pepperoni pizza.
+  [Receiver] hears: "I'd like to order a large pepperoni pizza."
+  [Receiver] : Sure! Any toppings you'd like to add?
+  [Caller]   hears: "Sure! Any toppings you'd like to add?"
+  [Caller]   : Yes, with extra cheese please.
+  [Receiver] hears: "Yes, with extra cheese please."
+  [Receiver] : Got it! Your order will be ready in 30 minutes.
+  [Caller]   hears: "Got it! Your order will be ready in 30 minutes."
+  [Caller]   : Great, thanks! Goodbye.
+  [Receiver] hears: "Great, thanks! Goodbye."
+  [Receiver] : Thank you for calling! Goodbye.
+  [Caller]   hears: "Thank you for calling! Goodbye."
+
+  --- Call ended ---
+\end{lstlisting}
+\end{outputbox}
+
+\newpage
+
+\subsection*{Part (c) --- Broadcast + Replies via FIFOs (\texttt{qs3c.c})}
+\begin{codebox}
+\begin{lstlisting}[style=cstyle]
+#include <errno.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
+
+#define NUM_LISTENERS 3
+#define NUM_BROADCASTS 4
+#define MSG_SIZE 256
+
+void get_bcast_path(int id, char *buf) {
+  sprintf(buf, "/tmp/qs3_bcast_%d", id);
+}
+void get_reply_path(int id, char *buf) {
+  sprintf(buf, "/tmp/qs3_reply_%d", id);
+}
+
+void listener(int id) {
+  char bcast_path[64], reply_path[64], buf[MSG_SIZE];
+  get_bcast_path(id, bcast_path);
+  get_reply_path(id, reply_path);
+  printf("  [Listener %d] Started (PID: %d)\n", id, getpid());
+  fflush(stdout);
+
+  int bcast_fd = open(bcast_path, O_RDONLY);
+  if (bcast_fd == -1) { perror("  listener open bcast"); exit(1); }
+  int reply_fd = open(reply_path, O_WRONLY);
+  if (reply_fd == -1) { perror("  listener open reply"); exit(1); }
+
+  while (1) {
+    ssize_t n = read(bcast_fd, buf, MSG_SIZE);
+    if (n <= 0) break;
+    if (strcmp(buf, "END") == 0) {
+      printf("  [Listener %d] Received END. Exiting.\n", id);
+      fflush(stdout);
+      char ack[MSG_SIZE];
+      snprintf(ack, MSG_SIZE, "Listener %d signing off.", id);
+      write(reply_fd, ack, strlen(ack) + 1);
+      break;
+    }
+    printf("  [Listener %d] Received: \"%s\"\n", id, buf);
+    fflush(stdout);
+    char reply[MSG_SIZE];
+    snprintf(reply, MSG_SIZE, "Listener %d: Acknowledged \"%s\"", id, buf);
+    write(reply_fd, reply, strlen(reply) + 1);
+  }
+  close(bcast_fd); close(reply_fd); exit(0);
+}
+
+int main() {
+  printf("========================================\n");
+  printf("  3c: Broadcast + Replies (Named FIFO)\n");
+  printf("========================================\n\n"); fflush(stdout);
+
+  char bcast_paths[NUM_LISTENERS][64], reply_paths[NUM_LISTENERS][64];
+  for (int i = 0; i < NUM_LISTENERS; i++) {
+    get_bcast_path(i, bcast_paths[i]);
+    get_reply_path(i, reply_paths[i]);
+    unlink(bcast_paths[i]); unlink(reply_paths[i]);
+    if (mkfifo(bcast_paths[i], 0666) == -1) { perror("mkfifo"); return 1; }
+    if (mkfifo(reply_paths[i], 0666) == -1) { perror("mkfifo"); return 1; }
+  }
+  printf("  [Broadcaster] FIFOs created.\n\n"); fflush(stdout);
+
+  pid_t pids[NUM_LISTENERS];
+  for (int i = 0; i < NUM_LISTENERS; i++) {
+    pids[i] = fork();
+    if (pids[i] < 0) { perror("fork"); return 1; }
+    if (pids[i] == 0) { listener(i); exit(0); }
+  }
+
+  int bcast_fds[NUM_LISTENERS], reply_fds[NUM_LISTENERS];
+  for (int i = 0; i < NUM_LISTENERS; i++) {
+    bcast_fds[i] = open(bcast_paths[i], O_WRONLY);
+    if (bcast_fds[i] == -1) { perror("open bcast"); return 1; }
+  }
+  for (int i = 0; i < NUM_LISTENERS; i++) {
+    reply_fds[i] = open(reply_paths[i], O_RDONLY);
+    if (reply_fds[i] == -1) { perror("open reply"); return 1; }
+  }
+
+  const char *updates[] = {"Heatwave alert: 42C expected tomorrow",
+    "Rain forecast for evening, carry umbrellas",
+    "Air quality index: Moderate (AQI 120)",
+    "Weekend outlook: Pleasant, 26C"};
+  char buf[MSG_SIZE];
+
+  for (int b = 0; b < NUM_BROADCASTS; b++) {
+    printf("\n  [Broadcaster] Sending: \"%s\"\n", updates[b]);
+    fflush(stdout);
+    for (int i = 0; i < NUM_LISTENERS; i++)
+      write(bcast_fds[i], updates[b], strlen(updates[b]) + 1);
+    usleep(100000);
+    for (int i = 0; i < NUM_LISTENERS; i++) {
+      ssize_t n = read(reply_fds[i], buf, MSG_SIZE);
+      if (n > 0) {
+        printf("  [Broadcaster] Reply: \"%s\"\n", buf);
+        fflush(stdout);
+      }
+    }
+    usleep(200000);
+  }
+
+  printf("\n  [Broadcaster] Sending END.\n"); fflush(stdout);
+  for (int i = 0; i < NUM_LISTENERS; i++) write(bcast_fds[i], "END", 4);
+  usleep(100000);
+  for (int i = 0; i < NUM_LISTENERS; i++) {
+    ssize_t n = read(reply_fds[i], buf, MSG_SIZE);
+    if (n > 0) {
+      printf("  [Broadcaster] Final: \"%s\"\n", buf);
+      fflush(stdout);
+    }
+  }
+  for (int i = 0; i < NUM_LISTENERS; i++)
+    { close(bcast_fds[i]); close(reply_fds[i]); }
+  for (int i = 0; i < NUM_LISTENERS; i++) waitpid(pids[i], NULL, 0);
+  for (int i = 0; i < NUM_LISTENERS; i++)
+    { unlink(bcast_paths[i]); unlink(reply_paths[i]); }
+  printf("\n  [Broadcaster] FIFOs cleaned up. Done.\n");
+  return 0;
+}
+\end{lstlisting}
+\end{codebox}
+
+\subsection*{Output --- Part (c)}
+\begin{outputbox}
+\begin{lstlisting}[style=outputstyle]
+========================================
+  3c: Broadcast + Replies (Named FIFO)
+========================================
+
+  [Broadcaster] FIFOs created.
+
+  [Listener 0] Started (PID: 52053)
+  [Listener 1] Started (PID: 52054)
+  [Listener 2] Started (PID: 52055)
+
+  [Broadcaster] Sending: "Heatwave alert: 42C expected tomorrow"
+  [Listener 0] Received: "Heatwave alert: 42C expected tomorrow"
+  [Listener 1] Received: "Heatwave alert: 42C expected tomorrow"
+  [Listener 2] Received: "Heatwave alert: 42C expected tomorrow"
+  [Broadcaster] Reply: "Listener 0: Acknowledged ..."
+  [Broadcaster] Reply: "Listener 1: Acknowledged ..."
+  [Broadcaster] Reply: "Listener 2: Acknowledged ..."
+
+  [Broadcaster] Sending: "Rain forecast for evening, carry umbrellas"
+  [Listener 0] Received: "Rain forecast for evening, carry umbrellas"
+  [Listener 1] Received: "Rain forecast for evening, carry umbrellas"
+  [Listener 2] Received: "Rain forecast for evening, carry umbrellas"
+  [Broadcaster] Reply: "Listener 0: Acknowledged ..."
+  [Broadcaster] Reply: "Listener 1: Acknowledged ..."
+  [Broadcaster] Reply: "Listener 2: Acknowledged ..."
+
+  [Broadcaster] Sending: "Air quality index: Moderate (AQI 120)"
+  [Listener 0] Received: "Air quality index: Moderate (AQI 120)"
+  [Listener 1] Received: "Air quality index: Moderate (AQI 120)"
+  [Listener 2] Received: "Air quality index: Moderate (AQI 120)"
+  [Broadcaster] Reply: "Listener 0: Acknowledged ..."
+  [Broadcaster] Reply: "Listener 1: Acknowledged ..."
+  [Broadcaster] Reply: "Listener 2: Acknowledged ..."
+
+  [Broadcaster] Sending: "Weekend outlook: Pleasant, 26C"
+  [Listener 0] Received: "Weekend outlook: Pleasant, 26C"
+  [Listener 2] Received: "Weekend outlook: Pleasant, 26C"
+  [Listener 1] Received: "Weekend outlook: Pleasant, 26C"
+  [Broadcaster] Reply: "Listener 0: Acknowledged ..."
+  [Broadcaster] Reply: "Listener 1: Acknowledged ..."
+  [Broadcaster] Reply: "Listener 2: Acknowledged ..."
+
+  [Broadcaster] Sending END to all listeners.
+  [Listener 0] Received END. Exiting.
+  [Listener 1] Received END. Exiting.
+  [Listener 2] Received END. Exiting.
+  [Broadcaster] Final: "Listener 0 signing off."
+  [Broadcaster] Final: "Listener 1 signing off."
+  [Broadcaster] Final: "Listener 2 signing off."
+
+  [Broadcaster] FIFOs cleaned up. Done.
+\end{lstlisting}
+\end{outputbox}
+
+\newpage
+
+% ══════════════════════════════════════════════════════════
+%  QUESTION 4
+% ══════════════════════════════════════════════════════════
+\section{CPU Scheduling Algorithms}
+
+\begin{questionbox}
+Build a scheduler that reads job execution profiles from a file and simulates \textbf{FCFS}, \textbf{Non-Preemptive Priority}, and \textbf{Round Robin (quantum = 16)}. Compare the average turnaround time (TAT) and waiting time (WT).
+\end{questionbox}
+
+\begin{theorybox}
+A \textbf{CPU Scheduler} selects which ready process gets the CPU next.
+\begin{itemize}[nosep]
+    \item \textbf{FCFS} --- Non-preemptive, FIFO order. Simple but suffers from the convoy effect.
+    \item \textbf{Priority} --- Non-preemptive, lowest priority number wins. Risk of starvation for low-priority jobs.
+    \item \textbf{Round Robin} --- Preemptive, fixed time quantum. Fair but incurs context-switch overhead.
+\end{itemize}
+Each job has alternating CPU and I/O bursts. After a CPU burst, the job enters I/O; after I/O completes, it re-enters the ready queue. Waiting time accumulates only while in the ready queue.
+\end{theorybox}
+
+\subsection*{Input File --- \texttt{jobs.txt}}
+\begin{codebox}
+\begin{lstlisting}[style=outputstyle]
+1 3 0 32 64 16 32 -1
+2 1 4 64 8 32 16 8 -1
+3 4 6 24 48 12 -1
+4 2 8 48 32 24 64 16 -1
+5 5 10 16 32 48 -1
+6 1 12 64 16 32 8 16 -1
+7 3 14 32 24 16 48 8 -1
+8 2 16 24 16 48 32 16 -1
+\end{lstlisting}
+\end{codebox}
+
+\subsection*{Output}
+\begin{outputbox}
+\begin{lstlisting}[style=outputstyle]
+========================================
+     CPU Scheduler Simulation
+========================================
+
+  Loaded 8 job profiles:
+  ------------------------------------------------------------
+  Job 1 | Priority: 3 | Arrival:  0 | CPU(32)->I/O(64)->CPU(16)->I/O(32)
+  Job 2 | Priority: 1 | Arrival:  4 | CPU(64)->I/O(8)->CPU(32)->I/O(16)->CPU(8)
+  Job 3 | Priority: 4 | Arrival:  6 | CPU(24)->I/O(48)->CPU(12)
+  Job 4 | Priority: 2 | Arrival:  8 | CPU(48)->I/O(32)->CPU(24)->I/O(64)->CPU(16)
+  Job 5 | Priority: 5 | Arrival: 10 | CPU(16)->I/O(32)->CPU(48)
+  Job 6 | Priority: 1 | Arrival: 12 | CPU(64)->I/O(16)->CPU(32)->I/O(8)->CPU(16)
+  Job 7 | Priority: 3 | Arrival: 14 | CPU(32)->I/O(24)->CPU(16)->I/O(48)->CPU(8)
+  Job 8 | Priority: 2 | Arrival: 16 | CPU(24)->I/O(16)->CPU(48)->I/O(32)->CPU(16)
+  ------------------------------------------------------------
+
+  ===== 1. FCFS Scheduling =====
+
+  Gantt Chart:
+  | J1  | J2  | J3  | J4  | J5  | J6  | J7  | J8  | J1  | ...
+  0    32    96   120   168   184   248   280   304   320  ...
+
+  +----------- FCFS (First Come First Serve) -------------+
+  | Job   Arrival   Completion   TAT        WT             |
+  | 1     0         352          352        208            |
+  | 2     4         540          536        372            |
+  | 3     6         364          358        274            |
+  | 4     8         556          548        300            |
+  | 5     10        436          426        298            |
+  | 6     12        572          560        400            |
+  | 7     14        580          566        438            |
+  | 8     16        596          580        436            |
+  | Average TAT:                490.75                     |
+  | Average WT:                 340.75                     |
+  +-------------------------------------------------------+
+
+  ===== 2. Non-Preemptive Priority Scheduling =====
+
+  +------------- Non-Preemptive Priority -----------------+
+  | Job   Arrival   Completion   TAT        WT             |
+  | 1     0         368          368        224            |
+  | 2     4         232          228        28             |
+  | 3     6         572          566        482            |
+  | 4     8         456          448        240            |
+  | 5     10        620          610        514            |
+  | 6     12        248          236        84             |
+  | 7     14        544          530        394            |
+  | 8     16        472          456        320            |
+  | Average TAT:                430.25                     |
+  | Average WT:                 285.75                     |
+  +-------------------------------------------------------+
+
+  ===== 3. Round Robin (quantum=16) =====
+
+  +--------------- Round Robin (q=16) --------------------+
+  | Job   Arrival   Completion   TAT        WT             |
+  | 1     0         336          336        184            |
+  | 2     4         548          544        408            |
+  | 3     6         316          310        226            |
+  | 4     8         596          588        396            |
+  | 5     10        428          418        322            |
+  | 6     12        580          568        432            |
+  | 7     14        468          454        326            |
+  | 8     16        564          548        412            |
+  | Average TAT:                470.75                     |
+  | Average WT:                 338.25                     |
+  +-------------------------------------------------------+
+\end{lstlisting}
+\end{outputbox}
+
+\subsection*{Comparison}
+\begin{table}[h]
+\centering
+\begin{tabular}{lcc}
+\toprule
+\textbf{Algorithm} & \textbf{Avg TAT} & \textbf{Avg WT} \\
+\midrule
+FCFS & 490.75 & 340.75 \\
+Non-Preemptive Priority & \textbf{430.25} & \textbf{285.75} \\
+Round Robin ($q = 16$) & 470.75 & 338.25 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Priority scheduling achieves the best (lowest) average waiting time for this workload, while FCFS performs worst due to the convoy effect.
+
+\newpage
+
+% ══════════════════════════════════════════════════════════
+%  QUESTION 5
+% ══════════════════════════════════════════════════════════
+\section{Deadlock Avoidance --- Banker's Algorithm}
+
+\begin{questionbox}
+Implement the Banker's Algorithm to determine if a system is in a safe state and whether resource requests should be granted without leading to deadlock. Simulate until all processes finish.
+\end{questionbox}
+
+\begin{theorybox}
+The \textbf{Banker's Algorithm} avoids deadlock by checking safety before granting resources.
+
+Key data structures:
+\begin{itemize}[nosep]
+    \item \textbf{Available} --- Free instances per resource type.
+    \item \textbf{Max} --- Maximum demand of each process.
+    \item \textbf{Allocation} --- Currently held resources.
+    \item \textbf{Need} --- Remaining demand ($\text{Need} = \text{Max} - \text{Allocation}$).
+\end{itemize}
+
+\textbf{Safety check:} Find a process whose Need $\leq$ Work; simulate its completion (Work += Allocation); repeat. If all processes finish, the state is safe.
+
+\textbf{Resource request:} Verify Request $\leq$ Need and Request $\leq$ Available; tentatively allocate; run safety check; grant if safe, rollback if unsafe.
+\end{theorybox}
+
+\subsection*{Input File --- \texttt{input.txt}}
+\begin{codebox}
+\begin{lstlisting}[style=outputstyle]
+<#no of resources> 4 <#instances each> 2 4 5 3
+<#no of processes> 3 <max needs> 1 1 1 1, 2 3 1 2, 2 2 1 3
+\end{lstlisting}
+\end{codebox}
+
+\subsection*{Output}
+\begin{outputbox}
+\begin{lstlisting}[style=outputstyle]
+========================================
+   Banker's Algorithm Simulation
+========================================
+  Processes : 3
+  Resources : 4
+  Total     : [  2  4  5  3 ]
+
+  +------- Current System State -------+
+  Available : [  2  4  5  3 ]
+
+           Allocation     Need
+           R0 R1 R2 R3       R0 R1 R2 R3
+    P0  [  0  0  0  0 ]   [  1  1  1  1 ]
+    P1  [  0  0  0  0 ]   [  2  3  1  2 ]
+    P2  [  0  0  0  0 ]   [  2  2  1  3 ]
+
+  ---- Step 1 ----
+  P2 requests : [  2  2  1  3 ]
+  -> GRANT : Safe state confirmed.
+     Safe sequence: < P2 P0 P1 >
+  >> P2 completed. Releasing: [ 2 2 1 3 ]
+     Execution order: < P2 >
+
+  +------- Current System State -------+
+  Available : [  2  4  5  3 ]
+
+           Allocation     Need
+           R0 R1 R2 R3       R0 R1 R2 R3
+    P0  [  0  0  0  0 ]   [  1  1  1  1 ]
+    P1  [  0  0  0  0 ]   [  2  3  1  2 ]
+    P2* [  0  0  0  0 ]   [  0  0  0  0 ]
+
+  ---- Step 2 ----
+  P0 requests : [  1  1  1  1 ]
+  -> GRANT : Safe state confirmed.
+     Safe sequence: < P0 P1 P2 >
+  >> P0 completed. Releasing: [ 1 1 1 1 ]
+     Execution order: < P2 P0 >
+
+  +------- Current System State -------+
+  Available : [  2  4  5  3 ]
+
+           Allocation     Need
+           R0 R1 R2 R3       R0 R1 R2 R3
+    P0* [  0  0  0  0 ]   [  0  0  0  0 ]
+    P1  [  0  0  0  0 ]   [  2  3  1  2 ]
+    P2* [  0  0  0  0 ]   [  0  0  0  0 ]
+
+  ---- Step 3 ----
+  P1 requests : [  2  3  1  2 ]
+  -> GRANT : Safe state confirmed.
+     Safe sequence: < P1 P2 P0 >
+  >> P1 completed. Releasing: [ 2 3 1 2 ]
+     Execution order: < P2 P0 P1 >
+
+========================================
+  All 3 processes finished successfully.
+  Total steps taken: 3
+  Final execution order: < P2 P0 P1 >
+========================================
+\end{lstlisting}
+\end{outputbox}
+
+\vfill
+\begin{center}
+{\color{rulegray}\rule{0.4\linewidth}{0.6pt}}\\[0.3cm]
+{\small\textsc{End of Report}}
+\end{center}
+
+\end{document}

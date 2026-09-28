@@ -61,7 +61,7 @@ outer_loop:
 inner_loop:
     mov ax, [si]
     cmp ax, [si+2]
-    jle no_swap     ; if array[i] <= array[i+1], do nothing
+    jle no_swap     ; if array[i] <= array[i+1] (SIGNED), do nothing
     
     ; Swap elements
     mov dx, [si+2]
@@ -105,19 +105,37 @@ print_loop:
     int 21h
 main endp
 
-; Subroutine: Read a multi-digit number into AX
+; Subroutine: Read a multi-digit number (handles negatives) into AX
 read_num proc
     push bx
     push cx
+    push dx
+    push di
+    
     mov bx, 0       ; Result accumulator
-read_char:
+    mov di, 0       ; Flag for negative (0 = pos, 1 = neg)
+
+read_first_char:
     mov ah, 01h
     int 21h
-    cmp al, 0Dh     ; Check for Enter (Carriage Return)
+    cmp al, 0Dh     ; Check for Enter
     je end_read
     cmp al, ' '     ; Check for Space
     je end_read
-    
+    cmp al, '-'     ; Check for negative sign
+    jne process_digit
+    mov di, 1       ; Set negative flag
+    jmp read_char   ; Go read the actual digits
+
+read_char:
+    mov ah, 01h
+    int 21h
+    cmp al, 0Dh
+    je end_read
+    cmp al, ' '
+    je end_read
+
+process_digit:
     sub al, '0'     ; Convert ASCII to integer
     mov cl, al
     mov ch, 0
@@ -128,20 +146,41 @@ read_char:
     add ax, cx      ; Add new digit
     mov bx, ax
     jmp read_char
+
 end_read:
+    cmp di, 1       ; Was it negative?
+    jne return_read
+    neg bx          ; If yes, two's complement negate the result
+
+return_read:
     mov ax, bx      ; Store final result in AX
+    pop di
+    pop dx
     pop cx
     pop bx
     ret
 read_num endp
 
-; Subroutine: Print a number in AX
+; Subroutine: Print a number in AX (handles negatives)
 print_num proc
     push ax
     push bx
     push cx
     push dx
     
+    ; Check if negative
+    cmp ax, 0
+    jge print_positive
+    
+    ; If negative, print minus sign and negate AX
+    push ax
+    mov dl, '-'
+    mov ah, 02h
+    int 21h
+    pop ax
+    neg ax          ; Make it positive for division
+
+print_positive:
     mov cx, 0       ; Digit counter
     mov bx, 10      ; Divisor
 divide_loop:

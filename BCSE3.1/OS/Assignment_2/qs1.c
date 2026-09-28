@@ -34,9 +34,8 @@ int main() {
     close(pipe1[1]); // Y doesnt write to pipe1
     close(pipe2[0]); // Y doesnt read from pipe2
 
-    int y =
-
-        printf("Process Y is writing %d\n", y);
+    int y = 200;
+    printf("Process Y is writing %d\n", y);
     write(pipe2[1], &y, sizeof(y));
 
     int x_read;
