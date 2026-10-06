@@ -1,0 +1,1 @@
+CDMA shouldnt be a single standalne process, if there are k no of stations sharing the same channel there should be k processes
